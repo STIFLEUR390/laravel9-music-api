@@ -9,6 +9,14 @@ class Music extends Model
 {
     use HasFactory;
 
+
+    /**
+     * The relationships that should always be loaded.
+     *
+     * @var array
+     */
+    protected $with = ['artist', 'genres', 'album'];
+
      /**
      * The attributes that are mass assignable.
      *
@@ -25,7 +33,8 @@ class Music extends Model
         'track_number',
         'copyright',
         'format',
-        'image'
+        'image',
+        'path',
     ];
 
     public function artist()
@@ -35,7 +44,7 @@ class Music extends Model
 
     public function genres()
     {
-        return $this->belongsToMany(Music::class, 'genres_music', 'music_id', 'genre_id', 'id', 'id');
+        return $this->belongsToMany(Genre::class, 'genres_music', 'music_id', 'genre_id', 'id', 'id');
     }
 
     public function album()

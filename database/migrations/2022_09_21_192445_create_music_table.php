@@ -21,12 +21,13 @@ return new class extends Migration
             $table->string('title')->nullable()->comment("Obtenir le titre du morceau");
             $table->string('playtime')->nullable()->comment("Durée de lecture totale des pistes");
             $table->string('playtime_s')->nullable()->comment("Temps de jeu total en quelques secondes");
-            $table->string('artwork')->nullable()->comment("Artwork du morceau");
+            $table->longText('artwork')->nullable()->comment("Artwork du morceau");
             $table->string('composers')->nullable()->comment("Les compositeurs du morceau");
             $table->string('track_number')->nullable()->comment("numéro de piste sur le nombre total de l'album, par exemple. 1/12");
             $table->string('copyright')->nullable()->comment("Informations de copyright de la piste");
             $table->string('format')->nullable()->comment("Format de fichier du fichier, par exemple. mp4");
             $table->text('image')->nullable();
+            $table->text('path');
             $table->timestamps();
         });
     }

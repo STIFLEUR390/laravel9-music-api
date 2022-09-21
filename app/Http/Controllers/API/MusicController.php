@@ -2,12 +2,23 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Models\Music;
 use Illuminate\Http\Request;
+use Owenoj\LaravelGetId3\GetId3;
+use Illuminate\Validation\Rules\File;
+use App\Http\Controllers\BaseController;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\File as FacadesFile;
+use App\Http\Resources\{MusicResource};
+use App\Models\Album;
+use App\Models\Artist;
+use App\Models\Genre;
+use Illuminate\Support\Str;
 
-class MusicController extends Controller
+class MusicController extends BaseController
 {
+    public $errorsFile = [];
+
     /**
      * Display a listing of the resource.
      *
@@ -15,7 +26,7 @@ class MusicController extends Controller
      */
     public function index()
     {
-        //
+        return $this->sendResponse(MusicResource::collection(Music::all()), '');
     }
 
     /**
@@ -26,7 +37,99 @@ class MusicController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'songs' => 'required',
+            'songs.*' => ['required', File::types(['audio/mp3', 'audio/flac', 'audio/mpeg'])->min(1024)->max(50 * 1024),]
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError(__('Error validation'), $validator->errors());
+        }
+
+        foreach ($request->file('songs') as $file) {
+
+            $track = new GetId3($file);
+            if (!empty($track->getArtist())) {
+                $name_artist = $track->getArtist();
+                $count = Artist::where('name', $name_artist)->get()->count();
+                if (!$count) {
+                    $artist = new Artist();
+                    $artist->name = $name_artist;
+                    $artist->slug = Str::slug($name_artist);
+                    $artist->save();
+                }
+            }
+            if (!empty($track->getAlbum())) {
+                $name_album = $track->getAlbum();
+                $count = Album::where('name', $name_album)->get()->count();
+                if (!$count) {
+                    $album = new Album();
+                    $album->name = $name_album;
+                    $album->slug = Str::slug($name_album);
+                    if (isset($name_artist)) {
+                        $artist = Artist::where("name", $name_artist)->first()->id;
+                        $album->artist()->associate($artist);
+                    }
+                    $album->save();
+                }
+            }
+
+            if (count($track->getGenres())) {
+                $genreList = [];
+                foreach ($track->getGenres() as $value) {
+                    $genreList[] = $value;
+                    $count = Genre::where('name', $value)->get()->count();
+                    if (!$count) {
+                        $genre = new Genre();
+                        $genre->name = $value;
+                        $genre->slug = Str::slug($value);
+                        $genre->save();
+                    }
+                }
+            }
+
+            if ($track->getTitle() && $track->getArtwork()) {
+                $count = Music::where('title', $track->getTitle())->get()->count();
+                if (!$count) {
+                    $music = new Music();
+                    $music->title = $track->getTitle();
+                    $music->playtime = $track->getPlaytime();
+                    $music->playtime_s = $track->getPlaytimeSeconds();
+                    $music->artwork = $track->getArtwork();
+                    $music->composers = $track->getComposer();
+                    $music->track_number = $track->getTrackNumber();
+                    $music->copyright = $track->getCopyrightInfo();
+                    $music->format = $track->getFileFormat();
+                    // $music->image = $track->getTitle();
+                    $music->path = $this->uploadFile($file);
+
+                    if (isset($name_artist)) {
+                        $artist = Artist::where("name", $name_artist)->first()->id;
+                        $music->artist()->associate($artist);
+                    }
+                    if (isset($name_album)) {
+                        $album = Album::where("name", $name_album)->first()->id;
+
+                        $music->album()->associate($album);
+                    }
+
+                    $music->save();
+                    if (count($track->getGenres())) {
+                        $genre_id = Genre::whereIn("name", $genreList)->pluck('id');
+                        $music->genres()->attach($genre_id);//sync
+                    }
+                }
+            } else {
+                $this->errorsFile[] = $file->getClientOriginalName();
+            }
+
+        }
+
+        if (count($this->errorsFile)) {
+            return $this->sendError(__('Some audio files were not imported'), $this->errorsFile);
+        }
+
+        return $this->sendResponse([], __('All audio files have been successfully imported'));
     }
 
     /**
@@ -37,7 +140,7 @@ class MusicController extends Controller
      */
     public function show(Music $music)
     {
-        //
+        return $this->sendResponse(new MusicResource($music), '');
     }
 
     /**
@@ -61,5 +164,18 @@ class MusicController extends Controller
     public function destroy(Music $music)
     {
         //
+    }
+
+    public function uploadFile($file, $exitpath = null)
+    {
+        if (!empty($exitpath) && FacadesFile::exists($exitpath)) {
+            FacadesFile::delete($exitpath);
+        }
+
+        $filename = date('YmdHis') . '-dev-master.' . $file->extension();
+        $file->storeAs('public/upload/music/', $filename);
+        $path = 'storage/upload/user-profile/' . $filename;
+
+        return $path;
     }
 }

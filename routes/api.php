@@ -1,6 +1,6 @@
 <?php
 
-// use App\Http\Controllers\API\MusicController;
+use App\Http\Controllers\API\MusicController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Route::apiResource("music", MusicController::class);
+Route::apiResource("music", MusicController::class);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
