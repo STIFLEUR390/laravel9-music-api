@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\Album;
+use App\Models\Genre;
 use App\Models\Music;
+use App\Models\Artist;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Owenoj\LaravelGetId3\GetId3;
 use Illuminate\Validation\Rules\File;
+use App\Http\Resources\{MusicResource};
 use App\Http\Controllers\BaseController;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File as FacadesFile;
-use App\Http\Resources\{MusicResource};
-use App\Models\Album;
-use App\Models\Artist;
-use App\Models\Genre;
-use Illuminate\Support\Str;
 
 class MusicController extends BaseController
 {
@@ -50,7 +51,7 @@ class MusicController extends BaseController
 
             $track = new GetId3($file);
             if (!empty($track->getArtist())) {
-                $name_artist = $track->getArtist();
+                $name_artist = $this->getNameArtist($track->getArtist());
                 $count = Artist::where('name', $name_artist)->get()->count();
                 if (!$count) {
                     $artist = new Artist();
@@ -88,8 +89,10 @@ class MusicController extends BaseController
                 }
             }
 
-            if ($track->getTitle() && $track->getArtwork()) {
-                $count = Music::where('title', $track->getTitle())->get()->count();
+            if ($track->getTitle() && $track->getArtwork() && $track->getArtist()) {
+                $count = Music::whereHas('artist', function (Builder $query) use ($name_artist) {
+                    $query->where('name', $name_artist);
+                })->where('title', $track->getTitle())->get()->count();
                 if (!$count) {
                     $music = new Music();
                     $music->title = $track->getTitle();
@@ -101,7 +104,7 @@ class MusicController extends BaseController
                     $music->copyright = $track->getCopyrightInfo();
                     $music->format = $track->getFileFormat();
                     // $music->image = $track->getTitle();
-                    $music->path = $this->uploadFile($file);
+                    $music->path = $this->uploadFile($file, $track->getTitle());
 
                     if (isset($name_artist)) {
                         $artist = Artist::where("name", $name_artist)->first()->id;
@@ -163,19 +166,46 @@ class MusicController extends BaseController
      */
     public function destroy(Music $music)
     {
-        //
+        $music->delete();
+
+        $this->sendResponse([], __('The audio file was successfully deleted'));
     }
 
-    public function uploadFile($file, $exitpath = null)
+    public function uploadFile($file, $name,$exitpath = null)
     {
         if (!empty($exitpath) && FacadesFile::exists($exitpath)) {
             FacadesFile::delete($exitpath);
         }
 
-        $filename = date('YmdHis') . '-dev-master.' . $file->extension();
+        $filename = date('YmdHis') . '-' .Str::slug($name) .'-dev-master.' . $file->extension();
         $file->storeAs('public/upload/music/', $filename);
         $path = 'storage/upload/user-profile/' . $filename;
 
         return $path;
+    }
+
+    public function getNameArtist(String $artist)
+    {
+        if (strpos($artist, 'feat.') !== false) {
+            $ex = explode('feat.', $artist);
+            return trim($ex["0"]);
+        } elseif (strpos($artist, 'Feat.') !== false) {
+            $ex = explode('Feat.', $artist);
+            return trim($ex["0"]);
+        } elseif (strpos($artist, 'ft.') !== false) {
+            $ex = explode('ft.', $artist);
+            return trim($ex["0"]);
+        } elseif (strpos($artist, 'Ft.') !== false) {
+            $ex = explode('Ft.', $artist);
+            return trim($ex["0"]);
+        } elseif (strpos($artist, '/') !== false) {
+            $ex = explode('/', $artist);
+            return trim($ex["0"]);
+        } elseif (strpos($artist, ';') !== false) {
+            $ex = explode(';', $artist);
+            return trim($ex["0"]);
+        }
+
+        return $artist;
     }
 }

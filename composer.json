@@ -12,6 +12,7 @@
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "owen-oj/laravel-getid3": "^2.1",
+        "spatie/laravel-backup": "^8.1",
         "spatie/laravel-mail-preview": "^6.0"
     },
     "require-dev": {
