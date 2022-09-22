@@ -166,9 +166,12 @@ class MusicController extends BaseController
      */
     public function destroy(Music $music)
     {
+        if (!empty($music->path) && FacadesFile::exists($music->path)) {
+            FacadesFile::delete($music->path);
+        }
         $music->delete();
 
-        $this->sendResponse([], __('The audio file was successfully deleted'));
+        return $this->sendResponse([], __('The audio file was successfully deleted'));
     }
 
     public function uploadFile($file, $name,$exitpath = null)
@@ -179,7 +182,7 @@ class MusicController extends BaseController
 
         $filename = date('YmdHis') . '-' .Str::slug($name) .'-dev-master.' . $file->extension();
         $file->storeAs('public/upload/music/', $filename);
-        $path = 'storage/upload/user-profile/' . $filename;
+        $path = 'storage/upload/music/' . $filename;
 
         return $path;
     }
