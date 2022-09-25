@@ -47,8 +47,13 @@ class MusicController extends BaseController
             return $this->sendError(__('Error validation'), $validator->errors());
         }
 
+        $taille_songs = 0;
+        $songs_non_enregistrer = [
+            'int' => 0,
+            'filles' => []
+        ];
         foreach ($request->file('songs') as $file) {
-
+            $taille_songs++;
             $track = new GetId3($file);
             if (!empty($track->getArtist())) {
                 $name_artist = $this->getNameArtist($track->getArtist());
@@ -94,16 +99,19 @@ class MusicController extends BaseController
                     $query->where('name', $name_artist);
                 })->where('title', $track->getTitle())->get()->count();
                 if (!$count) {
+                    $artwork = $track->getArtwork(true);
+                    $music_image = $this->uploadFile($artwork, $track->getTitle());
+
                     $music = new Music();
                     $music->title = $track->getTitle();
                     $music->playtime = $track->getPlaytime();
                     $music->playtime_s = $track->getPlaytimeSeconds();
-                    $music->artwork = $track->getArtwork();
+                    $music->artwork = $music_image;
                     $music->composers = $track->getComposer();
                     $music->track_number = $track->getTrackNumber();
                     $music->copyright = $track->getCopyrightInfo();
                     $music->format = $track->getFileFormat();
-                    // $music->image = $track->getTitle();
+                    // $music->image = $music_image;
                     $music->path = $this->uploadFile($file, $track->getTitle());
 
                     if (isset($name_artist)) {
@@ -121,6 +129,9 @@ class MusicController extends BaseController
                         $genre_id = Genre::whereIn("name", $genreList)->pluck('id');
                         $music->genres()->attach($genre_id);//sync
                     }
+                } else {
+                    $songs_non_enregistrer['int'] = $songs_non_enregistrer['int'] + 1;
+                    $songs_non_enregistrer['filles'][] = $file->getClientOriginalName();
                 }
             } else {
                 $this->errorsFile[] = $file->getClientOriginalName();
@@ -130,6 +141,8 @@ class MusicController extends BaseController
 
         if (count($this->errorsFile)) {
             return $this->sendError(__('Some audio files were not imported'), $this->errorsFile);
+        } elseif ($songs_non_enregistrer['int'] == $taille_songs) {
+            return $this->sendError(__('No file was imported'), $songs_non_enregistrer['filles']);
         }
 
         return $this->sendResponse([], __('All audio files have been successfully imported'));
@@ -168,6 +181,12 @@ class MusicController extends BaseController
     {
         if (!empty($music->path) && FacadesFile::exists($music->path)) {
             FacadesFile::delete($music->path);
+        }
+        if (!empty($music->artwork) && FacadesFile::exists($music->artwork)) {
+            FacadesFile::delete($music->artwork);
+        }
+        if (!empty($music->image) && FacadesFile::exists($music->image)) {
+            FacadesFile::delete($music->image);
         }
         $music->delete();
 

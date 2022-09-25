@@ -788,6 +788,7 @@
     "All audio files have been successfully imported": "Tous les fichiers audio ont été importé avec succès",
     "Some audio files were not imported": "Certains Fichiers audio n'ont pas été importé",
     "The audio file was successfully deleted": "Le fichier audio a été supprimé avec succés",
+    "No file was imported": "Aucun fichier n'a été importer",
     "": "",
     " ": " "
 }
