@@ -19,7 +19,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug');
             $table->text('photo')->nullable();
-            $table->foreignId('artist_id')->nullable()->constrained('artists')->onUpdate('cascade')->onDelete('cascade');
+            $table->string('artist_id')->nullable();
+            // $table->foreignId('artist_id')->nullable()->constrained('artists')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });
     }

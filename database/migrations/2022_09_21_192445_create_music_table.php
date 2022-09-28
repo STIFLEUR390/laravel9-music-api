@@ -16,8 +16,10 @@ return new class extends Migration
         Schema::disableForeignKeyConstraints();
         Schema::create('music', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('artist_id')->nullable()->constrained('artists')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignId('album_id')->nullable()->constrained('albums')->onUpdate('cascade')->onDelete('cascade');
+            // $table->foreignId('artist_id')->nullable()->constrained('artists')->onUpdate('cascade')->onDelete('cascade');
+            // $table->foreignId('album_id')->nullable()->constrained('albums')->onUpdate('cascade')->onDelete('cascade');
+            $table->string('artist_id')->nullable();
+            $table->string('album_id')->nullable();
             $table->string('title')->nullable()->comment("Obtenir le titre du morceau");
             $table->string('playtime')->nullable()->comment("Durée de lecture totale des pistes");
             $table->string('playtime_s')->nullable()->comment("Temps de jeu total en quelques secondes");

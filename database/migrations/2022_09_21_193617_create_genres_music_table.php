@@ -15,8 +15,10 @@ return new class extends Migration
     {
         Schema::create('genres_music', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('genre_id')->constrained('genres')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignId('music_id')->nullable()->constrained('music')->onUpdate('cascade')->onDelete('cascade');
+            // $table->foreignId('genre_id')->constrained('genres')->onUpdate('cascade')->onDelete('cascade');
+            // $table->foreignId('music_id')->nullable()->constrained('music')->onUpdate('cascade')->onDelete('cascade');
+            $table->string('genre_id');
+            $table->string('music_id');
             $table->timestamps();
         });
     }

@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,4 +18,24 @@ Route::mailPreview();
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+
+Route::get('/storage/link', function(){
+    foreach (array_keys(config('filesystems.links')) as $value) {
+        if (file_exists($value)) {
+            File::deleteDirectory($value);
+        }
+    }
+
+    Artisan::call('storage:link');
+
+    dd('lien symbolique ok');
+});
+
+
+Route::get('/optimize', function(){
+    Artisan::call('optimize:clear');
+
+    dd('optimize ok');
 });

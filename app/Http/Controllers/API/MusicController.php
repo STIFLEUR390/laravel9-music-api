@@ -27,7 +27,7 @@ class MusicController extends BaseController
      */
     public function index()
     {
-        return $this->sendResponse(MusicResource::collection(Music::all()), '');
+        return $this->sendResponse(MusicResource::collection(Music::orderBy('title')->get()), '');
     }
 
     /**
