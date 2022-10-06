@@ -789,6 +789,12 @@
     "Some audio files were not imported": "Certains Fichiers audio n'ont pas été importé",
     "The audio file was successfully deleted": "Le fichier audio a été supprimé avec succés",
     "No file was imported": "Aucun fichier n'a été importer",
+    "The photo in the album has been updated successfully": "La photo dans l'album a été mise à jour avec succès",
+    "The album was successfully deleted": "L'album a été supprimé avec succès",
+    "The artist's photo has been successfully changed": "La photo de l'artiste a été modifiée avec succès",
+    "The artist and these tracks have been successfully deleted": "L'artiste et ces pistes ont été supprimés avec succès",
+    "The music style has been updated successfully": "Le style de musique a été mis à jour avec succès",
+    ":style style songs have been known": "Les chansons de style :style ont été supprimées",
     "": "",
     " ": " "
 }

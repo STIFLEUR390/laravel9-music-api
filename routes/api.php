@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\MusicController;
+use App\Http\Controllers\API\{AlbumController, ArtistController, MusicController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::apiResource("music", MusicController::class)->except('update');
+
+Route::apiResource("album", AlbumController::class)->except('store');
+
+Route::apiResource("artist", ArtistController::class)->except('store');
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

@@ -27,7 +27,8 @@ class MusicController extends BaseController
      */
     public function index()
     {
-        return $this->sendResponse(MusicResource::collection(Music::orderBy('title')->get()), '');
+        // return $this->sendResponse(MusicResource::collection(Music::orderBy('title')->get()), '');
+        return $this->sendResponse(MusicResource::collection(Music::latest()->orderBy('track_number')->get()), '');
     }
 
     /**
@@ -200,8 +201,8 @@ class MusicController extends BaseController
         }
 
         $filename = date('YmdHis') . '-' .Str::slug($name) .'-dev-master.' . $file->extension();
-        $file->storeAs('public/upload/music/', $filename);
-        $path = 'storage/upload/music/' . $filename;
+        $file->storeAs('public/upload/music/songs/', $filename);
+        $path = 'storage/upload/music/songs/' . $filename;
 
         return $path;
     }
