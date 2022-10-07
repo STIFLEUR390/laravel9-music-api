@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\Album;
+use App\Models\Music;
 use App\Models\Artist;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use App\Http\Resources\ArtistResource;
+use App\Http\Controllers\BaseController;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 
-class ArtistController extends Controller
+class ArtistController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -19,7 +22,9 @@ class ArtistController extends Controller
      */
     public function index()
     {
-        $artists = Artist::with(['albums', 'music'])->latest()->get();
+        $artists = Artist::with(['albums', 'music'])->whereHas('music', function (Builder $query) {
+            $query->whereNotNull('artwork');
+        })->latest()->get();
         return $this->sendResponse(ArtistResource::collection($artists), '');
     }
 
@@ -66,7 +71,7 @@ class ArtistController extends Controller
         $artist->photo = $this->uploadFile($request->photo);
         $artist->save();
 
-        $this->sendResponse($artist, __("The artist's photo has been successfully changed"));
+        return $this->sendResponse($artist, __("The artist's photo has been successfully changed"));
     }
 
     /**
@@ -80,8 +85,14 @@ class ArtistController extends Controller
         if (!empty($artist->photo) && File::exists($artist->photo)) {
             File::delete($artist->photo);
         }
+        foreach ($artist->albums as $value) {
+            $this->deleteAlbum(Album::find($value->id));
+        }
+        foreach ($artist->music as $value) {
+            $this->musicDelete(Music::find($value->id));
+        }
         $artist->delete();
-        $this->sendResponse([], __("The artist and these tracks have been successfully deleted"));
+        return $this->sendResponse([], __("The artist and these tracks have been successfully deleted"));
     }
 
     public function uploadFile($file, $exitpath = null)
@@ -96,5 +107,31 @@ class ArtistController extends Controller
         $path = 'storage/upload/music/artist/' . $filename;
 
         return $path;
+    }
+
+    public function deleteAlbum(Album $album)
+    {
+        if (!empty($album->photo) && File::exists($album->photo)) {
+            File::delete($album->photo);
+        }
+
+        foreach ($album->music as $value) {
+            $this->musicDelete(Music::find($value->id));
+        }
+        $album->delete();
+    }
+
+    public function musicDelete(Music $music)
+    {
+        if (!empty($music->path) && File::exists($music->path)) {
+            File::delete($music->path);
+        }
+        if (!empty($music->artwork) && File::exists($music->artwork)) {
+            File::delete($music->artwork);
+        }
+        if (!empty($music->image) && File::exists($music->image)) {
+            File::delete($music->image);
+        }
+        $music->delete();
     }
 }

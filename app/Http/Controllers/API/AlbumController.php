@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Album;
+use App\Models\Music;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use App\Http\Resources\AlbumResource;
 use App\Http\Controllers\BaseController;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 
 class AlbumController extends BaseController
@@ -19,7 +21,9 @@ class AlbumController extends BaseController
      */
     public function index()
     {
-        $albums = Album::with(['artist', 'music'])->latest()->get();
+        $albums = Album::with(['artist', 'music'])->whereHas('music', function (Builder $query) {
+            $query->whereNotNull('artwork');
+        })->latest()->get();
         return $this->sendResponse(AlbumResource::collection($albums), '');
     }
 
@@ -58,14 +62,15 @@ class AlbumController extends BaseController
         $validator = Validator::make($request->all(), [
             'photo' => ['required', 'image', 'file', 'max:10240'],
         ]);
-
         if ($validator->fails()) {
             return $this->sendError(__('Error validation'), $validator->errors());
         }
+
+        $album = Album::find($album->id);
         $album->photo = $this->uploadFile($request->photo);
         $album->save();
 
-        $this->sendResponse($album, __('The photo in the album has been updated successfully'));
+        return $this->sendResponse($album, __('The photo in the album has been updated successfully'));
     }
 
     /**
@@ -79,8 +84,11 @@ class AlbumController extends BaseController
         if (!empty($album->photo) && File::exists($album->photo)) {
             File::delete($album->photo);
         }
+        foreach ($album->music as $value) {
+            $this->musicDelete(Music::find($value->id));
+        }
         $album->delete();
-        $this->sendResponse([], __('The album was successfully deleted'));
+        return $this->sendResponse([], __('The album was successfully deleted'));
     }
 
     public function uploadFile($file, $exitpath = null)
@@ -95,5 +103,19 @@ class AlbumController extends BaseController
         $path = 'storage/upload/music/album/' . $filename;
 
         return $path;
+    }
+
+    public function musicDelete(Music $music)
+    {
+        if (!empty($music->path) && File::exists($music->path)) {
+            File::delete($music->path);
+        }
+        if (!empty($music->artwork) && File::exists($music->artwork)) {
+            File::delete($music->artwork);
+        }
+        if (!empty($music->image) && File::exists($music->image)) {
+            File::delete($music->image);
+        }
+        $music->delete();
     }
 }
