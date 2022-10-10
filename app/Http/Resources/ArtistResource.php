@@ -19,8 +19,8 @@ class ArtistResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'photo' => $this->photo,
-            'album' => new AlbumResource($this->whenLoaded('album')),
+            'photo' => !empty($this->photo) ? asset($this->photo) : asset('/administrator.png'),
+            'albums' => AlbumResource::collection($this->whenLoaded('albums')),
             'music' => MusicResource::collection($this->whenLoaded('music'))
         ];
     }

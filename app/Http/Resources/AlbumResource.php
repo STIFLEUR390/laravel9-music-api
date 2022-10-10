@@ -19,7 +19,7 @@ class AlbumResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'photo' => $this->photo,
+            'photo' => !empty($this->photo) ? asset($this->photo) : '',
             'artist' => new ArtistResource($this->whenLoaded('artist')),
         ];
     }

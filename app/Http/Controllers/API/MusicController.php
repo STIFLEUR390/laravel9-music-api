@@ -117,11 +117,20 @@ class MusicController extends BaseController
 
                     if (isset($name_artist)) {
                         $artist = Artist::where("name", $name_artist)->first()->id;
+                        if (empty(Artist::where("name", $name_artist)->first()->photo)) {
+                            $art = Artist::where("name", $name_artist)->first();
+                            $art->photo = $music_image;
+                            $art->save();
+                        }
                         $music->artist()->associate($artist);
                     }
                     if (isset($name_album)) {
                         $album = Album::where("name", $name_album)->first()->id;
-
+                        if (empty(Album::where("name", $name_album)->first()->photo)) {
+                            $al = Album::where("name", $name_album)->first();
+                            $al->photo = $music_image;
+                            $al->save();
+                        }
                         $music->album()->associate($album);
                     }
 
