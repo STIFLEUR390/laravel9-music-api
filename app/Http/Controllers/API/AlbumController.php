@@ -70,7 +70,7 @@ class AlbumController extends BaseController
         $album->photo = $this->uploadFile($request->photo);
         $album->save();
 
-        return $this->sendResponse($album, __('The photo in the album has been updated successfully'));
+        return $this->sendResponse(new AlbumResource($album), __('The photo in the album has been updated successfully'));
     }
 
     /**

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::apiResource("music", MusicController::class)->except('update');
+Route::post('music/paginate', [MusicController::class, 'getMusic']);
 
 Route::apiResource("album", AlbumController::class)->except('store');
 

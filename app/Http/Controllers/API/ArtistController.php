@@ -71,7 +71,7 @@ class ArtistController extends BaseController
         $artist->photo = $this->uploadFile($request->photo);
         $artist->save();
 
-        return $this->sendResponse($artist, __("The artist's photo has been successfully changed"));
+        return $this->sendResponse(new ArtistResource($artist), __("The artist's photo has been successfully changed"));
     }
 
     /**

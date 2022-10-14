@@ -240,4 +240,43 @@ class MusicController extends BaseController
 
         return $artist;
     }
+
+    public function getMusic(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'paginate' => 'required',
+            'search' => 'nullable',
+            'artist' => 'nullable',
+            'album' => 'nullable',
+            'page' => 'nullable',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError(__('Error validation'), $validator->errors());
+        }
+        $paginate = $request->paginate;
+        $search = !empty($request->search) ? $request->search : null;
+        $artist = !empty($request->artist) ? $request->artist : null;
+        $album = !empty($request->album) ? $request->album : null;
+        $current_page = !empty($request->page) ? $request->page : 1;
+
+        $query = Music::whereNotNull('updated_at');
+        if ($search) {
+            $query->where('title', 'like', "%".$search."%");
+        }
+        if ($artist) {
+            $query->whereHas('artist', function(Builder $artistQuery) use ($artist) {
+                $artistQuery->where('name', $artist);
+            });
+        }
+        if ($album) {
+            $query->whereHas('album', function(Builder $albumQuery) use ($album) {
+                $albumQuery->where('name', $album);
+            });
+        }
+
+        $musics = $query->latest()->orderBy('track_number')->paginate($paginate, ['*'], 'current_page', $current_page);
+        // return $this->sendResponse(MusicResource::collection($musics), '');
+        return MusicResource::collection($musics);
+    }
 }
