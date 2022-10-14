@@ -118,4 +118,39 @@ class AlbumController extends BaseController
         }
         $music->delete();
     }
+
+    public function getAlbum(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'paginate' => 'required',
+            'search' => 'nullable',
+            'artist' => 'nullable',
+            'page' => 'nullable',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError(__('Error validation'), $validator->errors());
+        }
+
+        $paginate = $request->paginate;
+        $search = !empty($request->search) ? $request->search : null;
+        $artist = !empty($request->artist) ? $request->artist : null;
+        $current_page = !empty($request->page) ? $request->page : 1;
+
+        $queryAlb = Album::with(['artist', 'music']);
+        if ($search) {
+            $queryAlb->where('name', 'like', "%".$search."%");
+        }
+        if ($artist) {
+            $queryAlb->whereHas('artist', function(Builder $artistQuery) use ($artist) {
+                $artistQuery->where('name', $artist);
+            });
+        }
+
+        /* $albums = $queryAlb->whereHas('music', function (Builder $query) {
+            $query->whereNotNull('artwork');
+        })->latest()->paginate($paginate, ['*'], 'current_page', $current_page);
+         */
+        $albums = $queryAlb->latest()->paginate($paginate, ['*'], 'current_page', $current_page);
+        return AlbumResource::collection($albums);
+    }
 }

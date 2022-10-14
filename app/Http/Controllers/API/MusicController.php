@@ -41,7 +41,7 @@ class MusicController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'songs' => 'required',
-            'songs.*' => ['required', File::types(['audio/mp3', 'audio/flac', 'audio/mpeg'])->min(1024)->max(50 * 1024),]
+            'songs.*' => ['required', File::types(['audio/mp3', 'audio/flac', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/wma', 'audio/oga', 'audio/m4a', 'audio/m4b', 'audio/mpa'])->min(1024)->max(50 * 1024),]
         ]);
 
         if ($validator->fails()) {
@@ -150,9 +150,9 @@ class MusicController extends BaseController
         }
 
         if (count($this->errorsFile)) {
-            return $this->sendError(__('Some audio files were not imported'), $this->errorsFile);
+            return $this->sendError(__('Some audio files were not imported'), $this->errorsFile, 402);
         } elseif ($songs_non_enregistrer['int'] == $taille_songs) {
-            return $this->sendError(__('No file was imported'), $songs_non_enregistrer['filles']);
+            return $this->sendError(__('No file was imported'), $songs_non_enregistrer['filles'], 402);
         }
 
         return $this->sendResponse([], __('All audio files have been successfully imported'));

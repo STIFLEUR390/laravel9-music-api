@@ -134,4 +134,31 @@ class ArtistController extends BaseController
         }
         $music->delete();
     }
+
+    public function getArtist(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'paginate' => 'required',
+            'search' => 'nullable',
+            'page' => 'nullable',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError(__('Error validation'), $validator->errors());
+        }
+        $paginate = $request->paginate;
+        $search = !empty($request->search) ? $request->search : null;
+        $current_page = !empty($request->page) ? $request->page : 1;
+
+        $queryAr = Artist::with(['albums', 'music']);
+        if ($search) {
+            $queryAr->where('name', 'like', "%".$search."%");
+        }
+
+        /* $artists = $queryAr->whereHas('music', function (Builder $query) {
+            $query->whereNotNull('artwork');
+        })->latest()->paginate($paginate, ['*'], 'current_page', $current_page);
+         */
+        $artists = $queryAr->latest()->paginate($paginate, ['*'], 'current_page', $current_page);
+        return ArtistResource::collection($artists);
+    }
 }
