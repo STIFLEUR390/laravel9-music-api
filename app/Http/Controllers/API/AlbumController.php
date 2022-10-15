@@ -9,11 +9,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use App\Http\Resources\AlbumResource;
 use App\Http\Controllers\BaseController;
+use App\Traits\UploadFile;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 
 class AlbumController extends BaseController
 {
+    use UploadFile;
+
     /**
      * Display a listing of the resource.
      *
@@ -67,7 +70,7 @@ class AlbumController extends BaseController
         }
 
         $album = Album::find($album->id);
-        $album->photo = $this->uploadFile($request->photo);
+        $album->photo = $this->uploadFile($request->photo, $request->photo->getClientOriginalName(), 'upload/music/album/', $album->photo);
         $album->save();
 
         return $this->sendResponse(new AlbumResource($album), __('The photo in the album has been updated successfully'));
@@ -81,9 +84,7 @@ class AlbumController extends BaseController
      */
     public function destroy(Album $album)
     {
-        if (!empty($album->photo) && File::exists($album->photo)) {
-            File::delete($album->photo);
-        }
+        $this->deleteFile($album->photo);
         foreach ($album->music as $value) {
             $this->musicDelete(Music::find($value->id));
         }
@@ -91,31 +92,11 @@ class AlbumController extends BaseController
         return $this->sendResponse([], __('The album was successfully deleted'));
     }
 
-    public function uploadFile($file, $exitpath = null)
-    {
-        if (!empty($exitpath) && File::exists($exitpath)) {
-            File::delete($exitpath);
-        }
-
-        $name = $file->getClientOriginalName();
-        $filename = date('YmdHis') . '-' .Str::slug($name) .'-dev-master.' . $file->extension();
-        $file->storeAs('public/upload/music/album/', $filename);
-        $path = 'storage/upload/music/album/' . $filename;
-
-        return $path;
-    }
-
     public function musicDelete(Music $music)
     {
-        if (!empty($music->path) && File::exists($music->path)) {
-            File::delete($music->path);
-        }
-        if (!empty($music->artwork) && File::exists($music->artwork)) {
-            File::delete($music->artwork);
-        }
-        if (!empty($music->image) && File::exists($music->image)) {
-            File::delete($music->image);
-        }
+        $this->deleteFile($music->path);
+        $this->deleteFile($music->artwork);
+        $this->deleteFile($music->image);
         $music->delete();
     }
 

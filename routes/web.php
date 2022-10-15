@@ -33,9 +33,42 @@ Route::get('/storage/link', function(){
     dd('lien symbolique ok');
 });
 
+Route::get('/storage/del', function(){
+    foreach (array_keys(config('filesystems.links')) as $value) {
+        if (file_exists($value)) {
+            File::deleteDirectory($value);
+        }
+    }
+
+    dd('lien symbolique delete');
+});
+
+
+Route::get('/migration', function(){
+
+    Artisan::call('migrate:fresh');
+
+    dd('migration ok');
+});
+
+Route::get('/backup', function(){
+
+    Artisan::call('backup:run');
+
+    dd('sauvegarde ok');
+});
 
 Route::get('/optimize', function(){
+
     Artisan::call('optimize:clear');
+
+    Artisan::call('config:cache');
+
+    Artisan::call('event:cache');
+
+    Artisan::call('route:cache');
+
+    Artisan::call('view:cache');
 
     dd('optimize ok');
 });

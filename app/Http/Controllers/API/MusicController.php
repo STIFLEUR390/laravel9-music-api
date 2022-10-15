@@ -12,12 +12,15 @@ use Owenoj\LaravelGetId3\GetId3;
 use Illuminate\Validation\Rules\File;
 use App\Http\Resources\{MusicResource};
 use App\Http\Controllers\BaseController;
+use App\Traits\UploadFile;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File as FacadesFile;
 
 class MusicController extends BaseController
 {
+    use UploadFile;
+
     public $errorsFile = [];
 
     /**
@@ -189,31 +192,12 @@ class MusicController extends BaseController
      */
     public function destroy(Music $music)
     {
-        if (!empty($music->path) && FacadesFile::exists($music->path)) {
-            FacadesFile::delete($music->path);
-        }
-        if (!empty($music->artwork) && FacadesFile::exists($music->artwork)) {
-            FacadesFile::delete($music->artwork);
-        }
-        if (!empty($music->image) && FacadesFile::exists($music->image)) {
-            FacadesFile::delete($music->image);
-        }
+        $this->deleteFile($music->path);
+        $this->deleteFile($music->artwork);
+        $this->deleteFile($music->image);
         $music->delete();
 
         return $this->sendResponse([], __('The audio file was successfully deleted'));
-    }
-
-    public function uploadFile($file, $name,$exitpath = null)
-    {
-        if (!empty($exitpath) && FacadesFile::exists($exitpath)) {
-            FacadesFile::delete($exitpath);
-        }
-
-        $filename = date('YmdHis') . '-' .Str::slug($name) .'-dev-master.' . $file->extension();
-        $file->storeAs('public/upload/music/songs/', $filename);
-        $path = 'storage/upload/music/songs/' . $filename;
-
-        return $path;
     }
 
     public function getNameArtist(String $artist)
