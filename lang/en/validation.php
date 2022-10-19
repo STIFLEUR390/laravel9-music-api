@@ -151,6 +151,17 @@ return [
     | specify a specific custom language line for a given attribute rule.
     |
     */
+    'audio' => 'The :attribute must be a audio.',
+    'video' => 'The :attribute must be a video.',
+    'codec' => 'The :attribute codec must be one of these: :codec',
+    'duration' => 'The :attribute must be :duration seconds duration.',
+    'duration_max' => 'The :attribute duration must be less than :duration_max seconds.',
+    'duration_min' => 'The :attribute duration must be greater than :duration_min seconds.',
+    'video_width' => 'The :attribute width must be :video_width.',
+    'video_height' => 'The :attribute height must be :video_height.',
+    'video_max_width' => 'The :attribute width must be less than :video_max_width.',
+    'video_min_width' => 'The :attribute width must be greater than :video_min_width.',
+    'video_min_height' => 'The :attribute height must be greater than :video_min_height.',
 
     'custom' => [
         'attribute-name' => [
