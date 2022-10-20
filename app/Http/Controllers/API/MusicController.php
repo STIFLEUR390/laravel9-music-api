@@ -58,11 +58,12 @@ class MusicController extends BaseController
             'filles' => []
         ];
         foreach ($request->file('songs') as $file) {
-            $mimetypes = ['audio/mp3', 'audio/flac', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/wma', 'audio/oga', 'audio/m4a', 'audio/m4b', 'audio/mpa'];
+            // dd($file->extension(), $file->getClientMimeType(), $file->getClientOriginalExtension());
+
+            $mimetypes = ['audio/mp3', 'audio/flac', 'audio/x-flac', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/wma', 'audio/oga', 'audio/m4a', 'audio/m4b', 'audio/mpa'];
             if (in_array($file->getClientMimeType(), $mimetypes)) {
                 $taille_songs++;
                 $track = new GetId3($file);
-                // dd($track, $file->extension(), $file->getClientMimeType(), $file->getClientOriginalExtension());
                 if (!empty($track->getArtist())) {
                     $namtist = $this->getNameArtist($track->getArtist());
                     $name_artist = explode(",", $namtist)[0];

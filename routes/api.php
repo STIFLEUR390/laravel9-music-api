@@ -22,9 +22,11 @@ Route::post('music/paginate', [MusicController::class, 'getMusic']);
 
 Route::apiResource("album", AlbumController::class)->except('store');
 Route::post('album/paginate', [AlbumController::class, 'getAlbum']);
+Route::post('album/change', [AlbumController::class, 'changeAlbum']);
 
 Route::apiResource("artist", ArtistController::class)->except('store');
 Route::post('artist/paginate', [ArtistController::class, 'getArtist']);
+Route::post('artist/change', [ArtistController::class, 'changeArtist']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

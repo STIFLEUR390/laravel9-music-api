@@ -4,9 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Album;
 use App\Models\Music;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use App\Http\Resources\AlbumResource;
 use App\Http\Controllers\BaseController;
 use App\Traits\UploadFile;
@@ -133,5 +131,36 @@ class AlbumController extends BaseController
          */
         $albums = $queryAlb->latest()->paginate($paginate, ['*'], 'current_page', $current_page);
         return AlbumResource::collection($albums);
+    }
+
+    public function changeAlbum(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'alb1' => 'required',
+            'alb2' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError(__('Error validation'), $validator->errors());
+        }
+
+        $alb1 = Album::findOrFail($request->alb1);
+        $alb2 = Album::findOrFail($request->alb2);
+
+        if ($alb1 && $alb2) {
+            foreach ($alb1->music as $value) {
+                $music = Music::find($value->id);
+                $music->artist_id = $alb2->artist->id;
+                $music->album_id = $alb2->id;
+                $music->save();
+            }
+
+            $alb1 = Album::findOrFail($request->alb1);
+            if (!$alb1->music->count()) {
+                $this->deleteFile($alb1->photo);
+                $alb1->delete();
+            }
+        }
+        return $this->sendResponse([], __("Album change successfully"));
     }
 }

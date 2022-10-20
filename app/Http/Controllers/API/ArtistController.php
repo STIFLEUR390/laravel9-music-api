@@ -5,9 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Album;
 use App\Models\Music;
 use App\Models\Artist;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use App\Http\Resources\ArtistResource;
 use App\Http\Controllers\BaseController;
 use App\Traits\UploadFile;
@@ -114,7 +112,8 @@ class ArtistController extends BaseController
         $music->delete();
     }
 
-    public function getArtist(Request $request) {
+    public function getArtist(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'paginate' => 'required',
             'search' => 'nullable',
@@ -130,7 +129,7 @@ class ArtistController extends BaseController
 
         $queryAr = Artist::with(['albums', 'music']);
         if ($search) {
-            $queryAr->where('name', 'like', "%".$search."%");
+            $queryAr->where('name', 'like', "%" . $search . "%");
         }
 
         /* $artists = $queryAr->whereHas('music', function (Builder $query) {
@@ -139,5 +138,39 @@ class ArtistController extends BaseController
          */
         $artists = $queryAr->latest()->paginate($paginate, ['*'], 'current_page', $current_page);
         return ArtistResource::collection($artists);
+    }
+
+    public function changeArtist(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'art1' => 'required',
+            'art2' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError(__('Error validation'), $validator->errors());
+        }
+
+        $art1 = Artist::findOrFail($request->art1);
+        $art2 = Artist::findOrFail($request->art2);
+        if ($art1 && $art2) {
+            foreach ($art1->albums as $value) {
+                $album = Album::find($value->id);
+                $album->artist_id = $art2->id;
+                $album->save();
+            }
+            foreach ($art1->music as $value) {
+                $songs = Music::find($value->id);
+                $songs->artist_id = $art2->id;
+                $songs->save();
+            }
+
+            $art1 = Artist::findOrFail($request->art1);
+            if (!($art1->albums->count() || $art1->music->count())) {
+                $this->deleteFile($art1->photo);
+                $art1->delete();
+            }
+        }
+        return $this->sendResponse([], __("Artist change successfully"));
     }
 }
